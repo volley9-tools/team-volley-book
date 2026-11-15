@@ -413,6 +413,8 @@ const DRILLS = {
   review:{n:"振り返り",m:5,why:"できたこと・課題・次回やること"}
 };
 const DRILL_LIB = [
+  {c:"tech",k:"サーブ",n:"ルーティンサーブ",lv:"b",ppl:"1人〜",min:10,goal:"毎回同じ手順で打ち、本番でも崩れないサーブにする",how:["打つ前の手順（ボールをつく回数、息を吐く、狙いを見る）を自分で決める","毎回その手順を守って打つ","最後の5本は1本勝負。外したら全員で1本ダッシュ"],pts:["トスは毎回同じ場所に","急がない、ひと呼吸おいてから","当てて止める、体重は前へ"],ok:"10本中8本入る",cards:["floater"]},
+  {c:"tech",k:"サーブ",n:"狙い所サーブ",lv:"m",ppl:"2人〜",min:15,goal:"相手の担当の境目や前後の間を狙って崩す",how:["相手コートの、1列目の肩〜頭の高さの所や人と人の間に目印（コーンなど）を置く","狙う目印を宣言してから打つ","レシーバーを立たせて、お見合いを誘えたかも確かめる"],pts:["狙いを決めてから構える","コースは体の向きで作る","入れることが最優先、次に狙い"],ok:"10本中5本、目印の半径1.5m以内に入る",cards:["serveTarget","floater"]},
   {c:"tech",k:"ブロック",n:"見る順番ブロック",lv:"m",ppl:"6人〜",min:15,goal:"ボールだけを追わず、セッターと打つ人を見てから跳ぶくせをつける",how:["相手側にパスを出す人・セッター・アタッカー2人、こちら側にブロッカー2人","ブロッカーは「ボール」「セッター」「ボール」「アタッカー」と声に出しながら動く","セッターはレフトとライトにランダムに上げる"],pts:["あごを引いて上目づかい","体はネットにまっすぐ、斜めに跳ばない","アタッカーが跳んでから跳ぶ"],ok:"10本中7本、打つ人の正面（打つ腕の前）で跳べる",cards:["block","read"]},
   {c:"tech",k:"ブロック",n:"ネット際ステップ",lv:"b",ppl:"1人〜",min:10,goal:"横に動いても、止まって真上に跳べる足の運びを作る",how:["ネットの左・中央・右に目印を置く","近い所はサイドステップ、遠い所はクロスステップで移動して跳ぶ","コーチの指さしで行き先を決める"],pts:["跳ぶ前に止まる","手を下げない（肩の高さのまま移動）","両足で着地して、すぐ次の構え"],ok:"ネットに触れず、着地で膝が内側に入らない",cards:["block"]},
   {c:"tech",k:"レシーブ",n:"膝つきディグ",lv:"b",ppl:"2人",min:10,goal:"腕を振らずに、面を止めて強打を上げる感覚を作る",how:["レシーバーは床に膝をつき、3〜4m先から打ってもらう","最初は正面、慣れたら左右に振る"],pts:["面を目の端の下に固定","腕を振らない、当てて止める","強いボールは腕を少し引いて吸う"],ok:"10本中7本、自分の真上〜前に高く上がる",cards:["dig"]},
@@ -436,6 +438,16 @@ const DRILL_LIB = [
   {c:"team",k:"総合",n:"ブロック → ディグ → 攻撃の1サイクル",lv:"m",ppl:"9人〜",min:20,goal:"守ってから攻めるまでの流れを止めずにつなぐ",how:["相手側から攻撃してもらい、ブロック → ディグ → 2段トス → 攻撃 → フォローまでを1本とする","決まったら次の人と交代"],pts:["ブロッカーは着地したらすぐ攻撃の準備","乱れたら2段トスは高く","打ったら全員でフォロー"],ok:"10本中5本、攻撃まで通せる",cards:["defpos","cover"]}
 ];
 const DRILL_CAT = {tech:"技術別",pos:"ポジション別",team:"連携"};
+// ルーレットのテーマごとのおすすめメニュー（メニュー集の名前で指定）
+const THEME_DRILLS = {
+  miai:["お見合いゼロの間のボール","前か後ろかの判断","手を組まないレセプション","チャンスボールからの切り替え","捨てコースを決めるブロック＆ディグ"],
+  recv:["手を組まないレセプション","ルーティンサーブ","狙い所サーブ","膝つきディグ","打つ瞬間ストップ","前か後ろかの判断"],
+  atk:["助走の入りを合わせる","ブロックアウト打ち","回転チェックトス","配球判断トス","レフトアンテナ向きの入り","ブロックから攻撃へ","2段トス打ち切り","3人で囲むフォロー"],
+  def:["見る順番ブロック","ネット際ステップ","膝つきディグ","打つ瞬間ストップ","フライングの段階練習","ネットにかかったボール処理","抜け道ディグ","捨てコースを決めるブロック＆ディグ","3人で囲むフォロー"],
+  serve:["ルーティンサーブ","狙い所サーブ","見る順番ブロック","チャンスボールからの切り替え"],
+  game:["ブロック → ディグ → 攻撃の1サイクル","チャンスボールからの切り替え","お見合いゼロの間のボール","3人で囲むフォロー","ネットにかかったボール処理"]
+};
+const themeDrills = t => (THEME_DRILLS[t]||[]).map(n=>DRILL_LIB.find(d=>d.n===n)).filter(Boolean);
 const THEMES = {
   miai:{n:"お見合いをなくす",men:"men3",seq:["miokuri","border"],c:"#E2552E"},
   recv:{n:"サーブ・レシーブ",men:"men2",seq:["serve","recv"],c:"#1C8A72"},
@@ -735,31 +747,39 @@ function viewPractice(){
   const plan = buildPlan();
   let h = `<h2>練習メニュー</h2><div class="card"><label class="muted" for="ppl">参加人数</label><div class="stepper"><button data-ppl="-1" aria-label="1人減らす">−</button><input type="number" id="ppl" inputmode="numeric" min="1" max="40" value="${S.ppl}"><button data-ppl="1" aria-label="1人増やす">＋</button><span class="muted">人</span></div>`;
   h += `<p class="muted">テーマ</p><div class="chips">${Object.entries(THEMES).map(([k,v])=>`<button class="chip" data-theme="${k}" aria-pressed="${S.theme===k}">${v.n}</button>`).join("")}</div></div>`;
-  h += `<div class="card"><h3>テーマをルーレットで決める</h3><div class="wheel-wrap"><span class="pin"></span>${wheelSVG()}</div><button class="btn" data-spin="1" ${S.spinning?"disabled":""}>${S.spinning?"回転中…":"ルーレットを回す"}</button>${S.picked?`<p class="result" aria-live="polite">今日は「${esc(THEMES[S.picked].n)}」</p>`:""}</div>`;
+  h += `<div class="card"><h3>テーマをルーレットで決める</h3><div class="wheel-wrap"><span class="pin"></span>${wheelSVG()}</div><button class="btn" data-spin="1" ${S.spinning?"disabled":""}>${S.spinning?"回転中…":"ルーレットを回す"}</button>${S.picked?`<p class="result" aria-live="polite">今日は「${esc(THEMES[S.picked].n)}」</p><p class="why" style="text-align:center">おすすめメニュー${themeDrills(S.picked).length}本を、下の2時間メニューの後に出しています</p>`:""}</div>`;
   h += `<div class="card"><div class="row" style="justify-content:space-between"><h3>2時間・コート1面</h3><span class="muted">${S.ppl>=18?"9対9ができる人数":S.ppl>=10?"片面9人＋コーチ":"試合形式なし"}</span></div><div class="row"><span class="muted">必ず入れる：</span><div class="chips">${["men2","men3"].map(m=>`<button class="chip" data-men="${m}" aria-pressed="${(S.men||THEMES[S.theme].men)===m}">${m==="men2"?"2メン":"3メン"}</button>`).join("")}</div></div><div>`;
   plan.forEach(([m,d],i)=>{ const id=`d${i}`, key=`${S.theme}-${i}`; h+=`<div class="slot"><time>${fmt(m)}〜${fmt(m+d.m)}</time><label class="check" for="${id}"><input type="checkbox" id="${id}" data-done="${key}" ${S.done[key]?"checked":""}><span><b>${esc(d.n)}</b><br><span class="why">${esc(d.why)}</span></span></label></div>`; });
   h += `</div></div>`;
+  h += themeDrillCard();
   const k = KISO[S.kiso];
   h += `<h2>基礎練（ペアパス）</h2><p class="muted">準備を含めて最初の20〜30分。役割ごとにメニューが違います。</p><div class="seg" role="group" aria-label="役割">${Object.entries(KISO).map(([key,v])=>`<button data-kiso="${key}" aria-pressed="${S.kiso===key}">${v.n}</button>`).join("")}</div>`;
   h += `<div class="card"><ol class="clean">${k.items.map(([n,note])=>`<li><b>${esc(n)}</b>${note?`<div class="why">${esc(note)}</div>`:""}</li>`).join("")}</ol></div>`;
   return h + drillLib();
 }
 // 練習メニュー集：目的・やり方・意識するポイント・できた目安。関係する技術カードに飛べる
-function drillLib(){
-  const f=S.dlf||"all";
-  let h=`<h2>メニュー集</h2><p class="muted">目的に合わせて選べる練習メニューです。タップで開きます。</p><div class="chips">${[["all","すべて"],["tech","技術別"],["pos","ポジション別"],["team","連携"]].map(([k,l])=>`<button class="chip" data-dlf="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}</div>`;
-  ["tech","pos","team"].filter(c=>f==="all"||f===c).forEach(cat=>{
-    h+=`<h3 style="margin-top:6px">${DRILL_CAT[cat]}</h3><div class="stack">`;
-    DRILL_LIB.filter(d=>d.c===cat).forEach(d=>{
-      h+=`<details class="card" style="padding:0"><summary style="cursor:pointer;list-style:none;padding:12px 14px;display:flex;gap:8px;justify-content:space-between;align-items:center"><span><span class="tag" style="--c:var(--muted);--tbg:var(--court)">${esc(d.k)}</span> <b>${esc(d.n)}</b><br><small class="muted">${esc(d.goal)}</small></span>${lvTag2(d.lv)}</summary>
+function drillItem(d){
+  const ths=Object.keys(THEME_DRILLS).filter(t=>THEME_DRILLS[t].includes(d.n));
+  return `<details class="card" style="padding:0"><summary style="cursor:pointer;list-style:none;padding:12px 14px;display:flex;gap:8px;justify-content:space-between;align-items:center"><span><span class="tag" style="--c:var(--muted);--tbg:var(--court)">${esc(d.k)}</span> <b>${esc(d.n)}</b><br><small class="muted">${esc(d.goal)}</small></span>${lvTag2(d.lv)}</summary>
       <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px"><p class="muted">${d.min}分・${esc(d.ppl)}</p>
       <div style="background:var(--def-bg);border-radius:10px;padding:8px 12px"><b style="font-size:12px;color:var(--muted)">目的</b><br>${esc(d.goal)}</div>
       <div><b style="font-size:12px;color:var(--muted)">やり方</b><ol class="clean">${d.how.map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div>
       <div><b style="font-size:12px;color:var(--muted)">意識するポイント</b><ul class="clean">${d.pts.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
       <div style="background:var(--court);border-radius:10px;padding:8px 12px"><b style="font-size:12px;color:var(--muted)">できた目安</b><br>${esc(d.ok)}</div>
-      ${d.cards.length?`<div class="row" style="flex-wrap:wrap;gap:6px"><span class="muted">関係する技術カード：</span>${d.cards.map(id=>`<button class="chip" data-skill="${id}">${esc(CARDS[id].t)}</button>`).join("")}</div>`:""}</div></details>`;
-    });
-    h+=`</div>`;
+      ${d.cards.length?`<div class="row" style="flex-wrap:wrap;gap:6px"><span class="muted">関係する技術カード：</span>${d.cards.map(id=>`<button class="chip" data-skill="${id}">${esc(CARDS[id].t)}</button>`).join("")}</div>`:""}
+      ${ths.length?`<div class="row" style="flex-wrap:wrap;gap:6px"><span class="muted">このメニューが入るテーマ：</span>${ths.map(t=>`<button class="chip" data-theme="${t}" aria-pressed="${S.theme===t}">${esc(THEMES[t].n)}</button>`).join("")}</div>`:""}</div></details>`;
+}
+// 今日のテーマのおすすめメニュー（ルーレットやテーマのボタンと連動）
+function themeDrillCard(){
+  const ds=themeDrills(S.theme); if(!ds.length) return "";
+  return `<div class="card"><div class="row" style="justify-content:space-between"><h3>「${esc(THEMES[S.theme].n)}」のおすすめメニュー</h3><span class="muted">${ds.length}本</span></div><p class="why">2時間メニューの中の練習と入れかえたり、時間が余ったときに使えます。</p><div class="stack">${ds.map(drillItem).join("")}</div></div>`;
+}
+function drillLib(){
+  const f=S.dlf||"all";
+  let h=`<h2>メニュー集</h2><p class="muted">目的に合わせて選べる練習メニューです。タップで開きます。</p><div class="chips">${[["all","すべて"],["theme","今日のテーマ"],["tech","技術別"],["pos","ポジション別"],["team","連携"]].map(([k,l])=>`<button class="chip" data-dlf="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}</div>`;
+  if(f==="theme") return h+`<h3 style="margin-top:6px">${esc(THEMES[S.theme].n)}</h3><div class="stack">${themeDrills(S.theme).map(drillItem).join("")}</div>`;
+  ["tech","pos","team"].filter(c=>f==="all"||f===c).forEach(cat=>{
+    h+=`<h3 style="margin-top:6px">${DRILL_CAT[cat]}</h3><div class="stack">${DRILL_LIB.filter(d=>d.c===cat).map(drillItem).join("")}</div>`;
   });
   return h+`<p class="why">「できた目安」の数字は初心者〜中級者向けの目安です。チームに合わせて変えてください。</p>`;
 }
