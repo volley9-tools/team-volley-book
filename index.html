@@ -719,12 +719,26 @@ function skillResults(){
   } else h += CARD_GROUPS.map(g=>`<h3 style="margin-top:4px">${g.h}</h3><div class="stack">${g.ids.map(cardBtn).join("")}</div>`).join("");
   return h;
 }
+// おすすめメニューから、人数に合うものを時間内に入るだけ選ぶ。S.planSeed で組み合わせを変える
+function drillPpl(d){ const m=String(d.ppl).match(/\d+/); return m?+m[0]:1; }
+function pickThemeDrills(theme,n,budget){
+  const all=themeDrills(theme).filter(d=>drillPpl(d)<=n); if(!all.length) return [];
+  const k=(S.planSeed||0)%all.length, order=all.slice(k).concat(all.slice(0,k)), out=[]; let used=0;
+  order.forEach(d=>{ if(used+d.min<=budget){ out.push(d); used+=d.min; } });
+  // 余った時間は、最後のメニューを延ばして埋める
+  if(out.length&&used<budget){ const last=out[out.length-1]; out[out.length-1]={...last,min:last.min+(budget-used)}; }
+  return out;
+}
 function buildPlan(){
   const t = THEMES[S.theme], n = S.ppl, out=[]; let min=0;
-  const push=(k,ov)=>{ const d={...DRILLS[k],...(ov||{})}; out.push([min,d]); min+=d.m; };
+  const push=(k,ov)=>{ const d={...(k?DRILLS[k]:{}),...(ov||{})}; out.push([min,d]); min+=d.m; };
   push("kiso");
   push(S.men||t.men);
-  t.seq.forEach(k=>push(k));
+  // テーマの練習の時間に、メニュー集のおすすめから人数に合うものを自動で入れる。
+  // 時間はこれまでのテーマの練習と同じだけ使う（試合形式の時間は減らさない）。入らなければ元のメニュー
+  const budget=t.seq.reduce((a,k)=>a+DRILLS[k].m,0), picks=pickThemeDrills(S.theme,n,budget);
+  if(picks.length) picks.forEach(d=>push(null,{n:d.n,m:d.min,why:d.goal,lib:d}));
+  else t.seq.forEach(k=>push(k));
   const left = 115-min;
   if(n>=18) push("game",{m:left}); else if(n>=10) push("small",{m:left}); else push("dig",{n:"強打レシーブ＋判断ドリル（延長）",m:left,why:"9人以下なので試合形式の代わり"});
   push("review");
@@ -747,10 +761,12 @@ function viewPractice(){
   const plan = buildPlan();
   let h = `<h2>練習メニュー</h2><div class="card"><label class="muted" for="ppl">参加人数</label><div class="stepper"><button data-ppl="-1" aria-label="1人減らす">−</button><input type="number" id="ppl" inputmode="numeric" min="1" max="40" value="${S.ppl}"><button data-ppl="1" aria-label="1人増やす">＋</button><span class="muted">人</span></div>`;
   h += `<p class="muted">テーマ</p><div class="chips">${Object.entries(THEMES).map(([k,v])=>`<button class="chip" data-theme="${k}" aria-pressed="${S.theme===k}">${v.n}</button>`).join("")}</div></div>`;
-  h += `<div class="card"><h3>テーマをルーレットで決める</h3><div class="wheel-wrap"><span class="pin"></span>${wheelSVG()}</div><button class="btn" data-spin="1" ${S.spinning?"disabled":""}>${S.spinning?"回転中…":"ルーレットを回す"}</button>${S.picked?`<p class="result" aria-live="polite">今日は「${esc(THEMES[S.picked].n)}」</p><p class="why" style="text-align:center">おすすめメニュー${themeDrills(S.picked).length}本を、下の2時間メニューの後に出しています</p>`:""}</div>`;
+  h += `<div class="card"><h3>テーマをルーレットで決める</h3><div class="wheel-wrap"><span class="pin"></span>${wheelSVG()}</div><button class="btn" data-spin="1" ${S.spinning?"disabled":""}>${S.spinning?"回転中…":"ルーレットを回す"}</button>${S.picked?`<p class="result" aria-live="polite">今日は「${esc(THEMES[S.picked].n)}」</p><p class="why" style="text-align:center">2時間メニューに、このテーマのおすすめメニューを入れました</p>`:""}</div>`;
   h += `<div class="card"><div class="row" style="justify-content:space-between"><h3>2時間・コート1面</h3><span class="muted">${S.ppl>=18?"9対9ができる人数":S.ppl>=10?"片面9人＋コーチ":"試合形式なし"}</span></div><div class="row"><span class="muted">必ず入れる：</span><div class="chips">${["men2","men3"].map(m=>`<button class="chip" data-men="${m}" aria-pressed="${(S.men||THEMES[S.theme].men)===m}">${m==="men2"?"2メン":"3メン"}</button>`).join("")}</div></div><div>`;
-  plan.forEach(([m,d],i)=>{ const id=`d${i}`, key=`${S.theme}-${i}`; h+=`<div class="slot"><time>${fmt(m)}〜${fmt(m+d.m)}</time><label class="check" for="${id}"><input type="checkbox" id="${id}" data-done="${key}" ${S.done[key]?"checked":""}><span><b>${esc(d.n)}</b><br><span class="why">${esc(d.why)}</span></span></label></div>`; });
-  h += `</div></div>`;
+  plan.forEach(([m,d],i)=>{ const id=`d${i}`, key=`${S.theme}-${d.n}`; h+=`<div class="slot"><time>${fmt(m)}〜${fmt(m+d.m)}</time><label class="check" for="${id}"><input type="checkbox" id="${id}" data-done="${key}" ${S.done[key]?"checked":""}><span><b>${esc(d.n)}</b>${d.lib?` ${lvTag2(d.lib.lv)}`:""}<br><span class="why">${esc(d.why)}</span></span></label>${d.lib?`<details style="margin:2px 0 0 28px"><summary class="muted" style="cursor:pointer">やり方とポイント</summary><ol class="clean">${d.lib.how.map(x=>`<li>${esc(x)}</li>`).join("")}</ol><p class="why">意識すること：${d.lib.pts.map(esc).join("／")}</p><p class="why">できた目安：${esc(d.lib.ok)}</p></details>`:""}</div>`; });
+  h += `</div>`;
+  if(plan.some(([,d])=>d.lib)) h += `<div class="row" style="justify-content:space-between;margin-top:6px"><span class="why">テーマの練習は、メニュー集のおすすめから人数に合うものを自動で入れています。</span><button class="btn sub" data-reshuffle="1" style="white-space:nowrap">別の組み合わせ</button></div>`;
+  h += `</div>`;
   h += themeDrillCard();
   const k = KISO[S.kiso];
   h += `<h2>基礎練（ペアパス）</h2><p class="muted">準備を含めて最初の20〜30分。役割ごとにメニューが違います。</p><div class="seg" role="group" aria-label="役割">${Object.entries(KISO).map(([key,v])=>`<button data-kiso="${key}" aria-pressed="${S.kiso===key}">${v.n}</button>`).join("")}</div>`;
@@ -1363,7 +1379,7 @@ function dragEnd(){
 }
 function freshRender(){ render.reset=true; render(); }
 document.addEventListener("click",e=>{
-  const t = e.target.closest("[data-tab],[data-tsub],[data-form],[data-pos],[data-skill],[data-target],[data-mine],[data-theme],[data-done],[data-ppl],[data-spin],[data-kiso],[data-dlf],[data-teamsub],[data-edit-r],[data-edit-e],[data-cancel],[data-del-r],[data-del-e],[data-past],[data-men],[data-lu],[data-luset],[data-lupos],[data-assign],[data-unassign],[data-svmove],[data-copyset],[data-luback],[data-del-l],[data-regonly],[data-export],[data-import],[data-bmode],[data-bshow],[data-bundo],[data-bpreset],[data-bclear],[data-bload],[data-bdel],[data-fedit],[data-freset],[data-fdel],[data-tedit],[data-tadd],[data-treset],[data-tdel],[data-brand],[data-accent],[data-themereset],[data-bkind],[data-rshow],[data-sshow],[data-gp],[data-gopen],[data-gdone],[data-gstrdel],[data-gimpdel],[data-glogdel],[data-gshare],[data-gtext]");
+  const t = e.target.closest("[data-tab],[data-tsub],[data-form],[data-pos],[data-skill],[data-target],[data-mine],[data-theme],[data-done],[data-ppl],[data-spin],[data-kiso],[data-dlf],[data-reshuffle],[data-teamsub],[data-edit-r],[data-edit-e],[data-cancel],[data-del-r],[data-del-e],[data-past],[data-men],[data-lu],[data-luset],[data-lupos],[data-assign],[data-unassign],[data-svmove],[data-copyset],[data-luback],[data-del-l],[data-regonly],[data-export],[data-import],[data-bmode],[data-bshow],[data-bundo],[data-bpreset],[data-bclear],[data-bload],[data-bdel],[data-fedit],[data-freset],[data-fdel],[data-tedit],[data-tadd],[data-treset],[data-tdel],[data-brand],[data-accent],[data-themereset],[data-bkind],[data-rshow],[data-sshow],[data-gp],[data-gopen],[data-gdone],[data-gstrdel],[data-gimpdel],[data-glogdel],[data-gshare],[data-gtext]");
   if(!t) return;
   const d = t.dataset;
   if(d.done!==undefined){ S.done[d.done]=t.checked; return; }
@@ -1383,10 +1399,11 @@ document.addEventListener("click",e=>{
   else if(d.tdel){ if(!t.dataset.armed){ t.dataset.armed="1"; t.textContent="もう一度押すと削除"; return; } const ts=targets().filter(x=>x.n!==+d.tdel); saveSettings({serveTargets:ts.length?ts:null}); S.target=null; }
   else if(d.skill!==undefined){ S.tab="skills"; S.skill=d.skill||null; S.target=null; window.scrollTo(0,0); }
   else if(d.mine){ S.mine = S.mine===d.mine?null:d.mine; try{ S.mine?localStorage.setItem("vb-mine",S.mine):localStorage.removeItem("vb-mine"); }catch(err){} }
-  else if(d.theme){ S.theme=d.theme; S.picked=null; S.men=null; }
+  else if(d.theme){ S.theme=d.theme; S.picked=null; S.men=null; S.planSeed=0; }
   else if(d.ppl){ S.ppl=Math.min(40,Math.max(1,S.ppl+(+d.ppl))); }
   else if(d.kiso) S.kiso=d.kiso;
   else if(d.dlf) S.dlf=d.dlf;
+  else if(d.reshuffle) S.planSeed=(S.planSeed||0)+1;
   else if(d.spin){ return spin(); }
   else if(d.teamsub){ S.teamSub=d.teamsub; S.editR=S.editE=null; S.gp=null; D.err=""; return freshRender(); }
   else if(d.editR){ S.editR=d.editR; freshRender(); document.getElementById("fr")?.scrollIntoView({behavior:"smooth",block:"start"}); return; }
@@ -1445,7 +1462,7 @@ function spin(){
   S.spinning=true; S.picked=null; render();
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ const w=document.getElementById("wheel"); if(w) w.style.transform=`rotate(${next}deg)`; S.rot=next; }));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  setTimeout(()=>{ S.spinning=false; S.picked=keys[i]; S.theme=keys[i]; S.men=null; render(); }, reduce?50:3300);
+  setTimeout(()=>{ S.spinning=false; S.picked=keys[i]; S.theme=keys[i]; S.men=null; S.planSeed=0; render(); }, reduce?50:3300);
 }
 document.addEventListener("submit",async e=>{
   e.preventDefault();
